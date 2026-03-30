@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>md2ob Settings</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>md2ob Settings</h1>
+
+    <section>
+      <h2>Obsidian Vault</h2>
+      <p class="hint">Select your Obsidian vault directory. Files will be saved inside it.</p>
+      <div class="field">
+        <label>Vault directory:</label>
+        <span id="vault-path" class="path">Not configured</span>
+        <button id="btn-choose">Choose Directory</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Save Location</h2>
+      <div class="field">
+        <label for="folder-name">Folder name:</label>
+        <input type="text" id="folder-name" value="Clippings" placeholder="Clippings" />
+      </div>
+      <p class="hint">Files will be saved to &lt;vault&gt;/&lt;folder&gt;/</p>
+    </section>
+
+    <div id="status" class="status"></div>
+  </div>
+  <script type="module" src="options.ts"></script>
+</body>
+</html>
