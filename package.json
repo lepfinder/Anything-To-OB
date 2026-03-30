@@ -1,0 +1,17 @@
+{
+  "name": "md2ob",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "defuddle": "^0.14.0"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.4.0",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.3"
+  }
+}
