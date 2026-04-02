@@ -1,7 +1,6 @@
 import type { ClipResult, SaveResult, AppSettings } from '../shared/types';
 import { getDirectoryHandle, getSetting } from './storage';
-
-const DEFAULT_FOLDER = 'Clippings';
+import { DEFAULT_CLIP_FOLDER, upsertUrlInIndex } from './url-index';
 
 function sanitizeFilename(name: string): string {
   return name
@@ -44,7 +43,7 @@ export async function saveToVault(clip: ClipResult): Promise<SaveResult> {
   }
 
   const settings = await getSetting<AppSettings>('appSettings');
-  const folderName = settings?.folderName || DEFAULT_FOLDER;
+  const folderName = settings?.folderName || DEFAULT_CLIP_FOLDER;
 
   try {
     // Verify permission
@@ -67,6 +66,12 @@ export async function saveToVault(clip: ClipResult): Promise<SaveResult> {
     const writable = await fileHandle.createWritable();
     await writable.write(clip.content);
     await writable.close();
+
+    try {
+      await upsertUrlInIndex(subfolder, clip.url);
+    } catch {
+      // Index update failure should not undo a successful note write
+    }
 
     return { success: true, filename };
   } catch (err) {

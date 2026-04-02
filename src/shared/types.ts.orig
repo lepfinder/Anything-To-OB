@@ -35,18 +35,6 @@ export interface SaveResult {
   error?: string;
 }
 
-/** UI language; default Chinese when omitted. */
-export type AppLocale = 'zh' | 'en';
-
-/** UI colors. Default dark. */
-export type AppTheme = 'dark' | 'light';
-
 export interface AppSettings {
   folderName: string;
-  /** When true (default), warn if URL already appears in vault clip index. */
-  warnOnDuplicate?: boolean;
-  /** Interface language. Default zh. */
-  locale?: AppLocale;
-  /** Light or dark chrome. Default dark. */
-  theme?: AppTheme;
 }

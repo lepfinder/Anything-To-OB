@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <title>anything-to-ob</title>
@@ -7,13 +7,31 @@
 </head>
 <body>
   <div class="container">
-    <div class="title" id="page-title">Loading...</div>
-    <button id="btn-save" class="save-btn">Save to Obsidian</button>
+    <div class="title" id="page-title" data-i18n="popupLoading">加载中…</div>
+    <button type="button" id="btn-save" class="save-btn" data-i18n="popupSaveToObsidian">保存到 Obsidian</button>
     <div id="status" class="status"></div>
     <div class="footer">
-      <a href="#" id="btn-settings" class="settings-link">Settings</a>
+      <a href="#" id="btn-settings" class="settings-link" data-i18n="popupSettings">设置</a>
     </div>
   </div>
+
+  <div id="dup-overlay" class="dup-overlay hidden" aria-hidden="true">
+    <div class="dup-card" role="dialog" aria-modal="true" aria-labelledby="dup-title">
+      <div class="dup-badge" aria-hidden="true">↻</div>
+      <h2 id="dup-title" class="dup-title" data-i18n="dupTitle">此前已保存过</h2>
+      <p class="dup-body">
+        <span id="dup-body-before" data-i18n="dupBodyBefore"></span><time id="dup-time" class="dup-time"></time><span id="dup-body-after" data-i18n="dupBodyAfter"></span>
+      </p>
+      <p class="dup-hint">
+        <span data-i18n="dupHint">索引文件：</span><code class="dup-code">clip-url-index.json</code>
+      </p>
+      <div class="dup-actions">
+        <button type="button" class="dup-btn dup-btn-secondary" id="dup-cancel" data-i18n="dupCancel">取消</button>
+        <button type="button" class="dup-btn dup-btn-primary" id="dup-confirm" data-i18n="dupConfirm">仍要保存</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="popup.ts"></script>
 </body>
 </html>
