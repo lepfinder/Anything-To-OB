@@ -3,6 +3,7 @@ import { saveToVault } from '../lib/file';
 import { getDirectoryHandle, getSetting } from '../lib/storage';
 import { applyDataI18n, formatSavedAt, resolveLocale, tf, t } from '../shared/i18n';
 import { applyTheme, resolveTheme } from '../shared/theme';
+import { extractAiMetadata } from '../lib/ai';
 import { findSavedAtForUrl, getExistingClipSubfolder, DEFAULT_CLIP_FOLDER } from '../lib/url-index';
 import type { AppLocale, AppSettings, ClipRequest, SaveResult } from '../shared/types';
 
@@ -134,6 +135,21 @@ async function save(): Promise<void> {
     }
 
     setSaving(true);
+
+    // AI Enrichment
+    const settingsForAi = await getSetting<AppSettings>('appSettings');
+    if (settingsForAi?.aiEnabled) {
+      showStatus(t(uiLocale, 'popupAiAnalyzing'), 'success');
+      const aiResult = await extractAiMetadata(clip.content, clip.title);
+      if (aiResult) {
+        const aiFields = `tags: [${aiResult.tags.join(', ')}]
+summary: "${aiResult.oneSentence.replace(/"/g, '\\"')}"
+description: "${aiResult.summary.replace(/"/g, '\\"')}"`;
+        
+        // Merge into the existing frontmatter block (created by clipPage)
+        clip.content = clip.content.replace(/^---\n([\s\S]*?)\n---/, `---\n$1\n${aiFields}\n---`);
+      }
+    }
 
     // Save to vault
     const result: SaveResult = await saveToVault(clip);

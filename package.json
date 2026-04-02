@@ -7,7 +7,8 @@
     "build": "tsc --noEmit && vite build"
   },
   "dependencies": {
-    "defuddle": "^0.14.0"
+    "defuddle": "^0.14.0",
+    "openai": "^6.33.0"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.4.0",

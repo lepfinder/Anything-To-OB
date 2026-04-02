@@ -17,6 +17,7 @@ const M = {
     popupUnknownError: '未知错误',
     popupSettings: '设置',
     popupCurrentPage: '当前页面',
+    popupAiAnalyzing: 'AI 正在分析摘要与标签...',
 
     dupTitle: '此前已保存过',
     dupBodyBefore: '该页面已在剪藏索引中，记录时间：',
@@ -46,13 +47,22 @@ const M = {
     optThemeLabel: '主题：',
     optThemeDark: '深色',
     optThemeLight: '浅色',
-
     optStatusVaultSaved: '已保存仓库目录',
     optStatusFolderSaved: '已保存文件夹名称',
     optStatusDupSaved: '已保存重复检测选项',
     optStatusLangSaved: '已切换语言',
     optStatusThemeSaved: '已切换主题',
+    optStatusAiSaved: '已保存 AI 配置',
     optStatusChooseDirFailed: '选择目录失败',
+
+    optAiHeading: 'AI 增强（总结与标签）',
+    optAiEnabledLabel: '生成 AI 摘要与标签',
+    optAiProviderLabel: '供应商：',
+    optAiModelLabel: '模型 (Model)：',
+    optAiPromptLabel: '自定义提示词：',
+    optAiPromptHelp: '支持 {title} 和 {language} 变量。AI 会根据指令生成 JSON。',
+    optDefaultPrompt:
+      '请分析下面标题为 "{title}" 的网页内容，并提供：\n1. 一句话总结（oneSentence）。\n2. 段落摘要（summary）。\n3. 3-5个相关的标签（tags）。\n\n请严格按 JSON 格式返回，包含上述三个键。请使用 {language} 回答。',
   },
   en: {
     popupSaveToObsidian: 'Save to Obsidian',
@@ -70,6 +80,7 @@ const M = {
     popupUnknownError: 'Unknown error',
     popupSettings: 'Settings',
     popupCurrentPage: 'Current Page',
+    popupAiAnalyzing: 'AI is analyzing summary and tags...',
 
     dupTitle: 'Already saved',
     dupBodyBefore: 'This page is in your clip index from ',
@@ -100,13 +111,22 @@ const M = {
     optThemeLabel: 'Theme:',
     optThemeDark: 'Dark',
     optThemeLight: 'Light',
-
     optStatusVaultSaved: 'Vault directory saved',
     optStatusFolderSaved: 'Folder name saved',
     optStatusDupSaved: 'Duplicate preference saved',
     optStatusLangSaved: 'Language updated',
     optStatusThemeSaved: 'Theme updated',
+    optStatusAiSaved: 'AI settings saved',
     optStatusChooseDirFailed: 'Failed to select directory',
+
+    optAiHeading: 'AI Enhancement (Summary & Tags)',
+    optAiEnabledLabel: 'Auto-generate summary and tags',
+    optAiProviderLabel: 'Provider:',
+    optAiModelLabel: 'Model:',
+    optAiPromptLabel: 'Custom Prompt:',
+    optAiPromptHelp: 'Supports {title} and {language} variables. AI will generate JSON output.',
+    optDefaultPrompt:
+      'Analyze the following web content titled "{title}" and provide:\n1. A one-sentence summary (oneSentence).\n2. A short paragraph summary (summary).\n3. A list of 3-5 relevant tags (tags).\n\nRespond strictly in JSON format with the above three keys. Please respond in {language}.',
   },
 } as const;
 

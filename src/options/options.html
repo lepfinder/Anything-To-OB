@@ -38,6 +38,53 @@
       </div>
       <p class="hint" data-i18n="optDuplicatesHint">索引仅记录 url 与 savedAt。</p>
     </section>
+    <section>
+      <h2 data-i18n="optAiHeading">AI 增强（总结与标签）</h2>
+      <div class="field checkbox-field">
+        <label class="checkbox-label">
+          <input type="checkbox" id="ai-enabled" />
+          <span data-i18n="optAiEnabledLabel">生成 AI 摘要与标签</span>
+        </label>
+      </div>
+      <div id="ai-config" class="ai-config">
+        <div class="field">
+          <label for="ai-provider" data-i18n="optAiProviderLabel">供应商:</label>
+          <select id="ai-provider">
+            <option value="deepseek">DeepSeek</option>
+            <option value="ollama">Ollama (Local)</option>
+            <option value="ollama_remote">Ollama (Remote)</option>
+            <option value="qwen">通义千问 (Qwen)</option>
+            <option value="zhipu">智谱 AI (Zhipu)</option>
+            <option value="kimi">月之暗面 (Moonshot)</option>
+            <option value="openai">OpenAI</option>
+            <option value="custom">Other (Custom URL)</option>
+          </select>
+        </div>
+        <div class="field password-field">
+          <label for="ai-api-key">API Key:</label>
+          <div class="input-wrapper">
+            <input type="password" id="ai-api-key" placeholder="sk-..." />
+            <button type="button" id="btn-toggle-key" class="btn-icon">👁️</button>
+          </div>
+        </div>
+        <div class="field" id="ai-url-field">
+          <label for="ai-base-url">Base URL:</label>
+          <input type="text" id="ai-base-url" placeholder="https://api.openai.com/v1" />
+        </div>
+        <div class="field">
+          <label for="ai-model" data-i18n="optAiModelLabel">Model:</label>
+          <div class="input-wrapper">
+            <input type="text" id="ai-model" list="ai-model-list" placeholder="gpt-4o" />
+            <datalist id="ai-model-list"></datalist>
+          </div>
+        </div>
+        <div class="field vertical">
+          <label for="ai-prompt" data-i18n="optAiPromptLabel">Custom Prompt:</label>
+          <textarea id="ai-prompt" rows="5" placeholder="Analyze the content..."></textarea>
+          <p class="hint" data-i18n="optAiPromptHelp">Supports {title} and {language} variables...</p>
+        </div>
+      </div>
+    </section>
 
     <section>
       <h2 data-i18n="optThemeHeading">外观</h2>

@@ -121,3 +121,84 @@ code {
   padding: 2px 4px;
   border-radius: 4px;
 }
+.hidden {
+  display: none !important;
+}
+
+.field.vertical {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.field.vertical textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+  padding: 10px 12px;
+  background: var(--opt-input-bg);
+  border: 1px solid var(--opt-input-border);
+  border-radius: 4px;
+  color: var(--opt-input-text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.field.vertical textarea:focus {
+  outline: none;
+  border-color: var(--opt-focus);
+}
+
+.ai-config {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--opt-input-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+input[type="password"],
+input[type="text"] {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--opt-input-bg);
+  border: 1px solid var(--opt-input-border);
+  border-radius: 4px;
+  color: var(--opt-input-text);
+  font-size: 14px;
+}
+input[type="password"]:focus,
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--opt-focus);
+}
+.input-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding-right: 40px !important;
+}
+
+.btn-icon {
+  position: absolute;
+  right: 8px;
+  background: transparent !important;
+  border: none !important;
+  padding: 4px !important;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.btn-icon:hover {
+  opacity: 1;
+}

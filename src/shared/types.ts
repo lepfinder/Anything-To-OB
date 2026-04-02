@@ -49,4 +49,15 @@ export interface AppSettings {
   locale?: AppLocale;
   /** Light or dark chrome. Default dark. */
   theme?: AppTheme;
+  /** AI summary and tags generation. */
+  aiEnabled?: boolean;
+  aiProvider?: string;
+  aiConfigs?: Record<string, AiConfig>;
+  aiPrompt?: string;
+}
+
+export interface AiConfig {
+  apiKey: string;
+  baseUrl: string;
+  model: string;
 }
