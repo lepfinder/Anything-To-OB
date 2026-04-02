@@ -32,6 +32,7 @@ export interface ClipResult {
 export interface SaveResult {
   success: boolean;
   filename: string;
+  vaultName?: string;
   error?: string;
 }
 

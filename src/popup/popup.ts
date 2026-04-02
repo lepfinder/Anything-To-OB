@@ -138,24 +138,56 @@ async function save(): Promise<void> {
 
     // AI Enrichment
     const settingsForAi = await getSetting<AppSettings>('appSettings');
+    console.log('[Popup] Current settings:', settingsForAi);
     if (settingsForAi?.aiEnabled) {
+      console.log('[Popup] AI enabled, starting extraction...');
       showStatus(t(uiLocale, 'popupAiAnalyzing'), 'success');
       const aiResult = await extractAiMetadata(clip.content, clip.title);
       if (aiResult) {
+        console.log('[Popup] AI metadata extracted:', aiResult);
+        
+        // If AI provides a better title, update the clip info
+        if (aiResult.title && aiResult.title !== clip.title) {
+          console.log(`[Popup] Renamed by AI: "${clip.title}" -> "${aiResult.title}"`);
+          clip.title = aiResult.title;
+        }
+
         const aiFields = `tags: [${aiResult.tags.join(', ')}]
 summary: "${aiResult.oneSentence.replace(/"/g, '\\"')}"
 description: "${aiResult.summary.replace(/"/g, '\\"')}"`;
         
-        // Merge into the existing frontmatter block (created by clipPage)
-        clip.content = clip.content.replace(/^---\n([\s\S]*?)\n---/, `---\n$1\n${aiFields}\n---`);
+        // Update both the title in frontmatter and append AI fields
+        clip.content = clip.content.replace(/^---\n([\s\S]*?)\n---/, (match, group1) => {
+          const frontmatter = group1.replace(/^title:.*$/m, `title: ${clip.title}`);
+          return `---\n${frontmatter}\n${aiFields}\n---`;
+        });
+      } else {
+        console.warn('[Popup] AI extraction returned null.');
       }
+    } else {
+      console.log('[Popup] AI disabled in settings.');
     }
 
     // Save to vault
     const result: SaveResult = await saveToVault(clip);
 
     if (result.success) {
-      showStatus(tf(uiLocale, 'popupSaved', { name: result.filename }), 'success');
+      const folderName = appSettings.folderName || DEFAULT_CLIP_FOLDER;
+      const obsLink = `obsidian://open?vault=${encodeURIComponent(
+        result.vaultName || '',
+      )}&file=${encodeURIComponent(folderName + '/' + result.filename)}`;
+      
+      const successMsg = tf(uiLocale, 'popupSaved', { name: result.filename });
+      const openLabel = t(uiLocale, 'popupOpenInObsidian');
+      
+      // Dynamic link for power users
+      statusEl.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div>${successMsg}</div>
+          <a href="${obsLink}" target="_blank" style="color: var(--accent-light); font-size: 11px; text-decoration: underline;">${openLabel} ↗</a>
+        </div>
+      `;
+      statusEl.className = 'status-container success';
     } else {
       if (result.error?.includes('Permission denied') || result.error?.includes('not configured')) {
         showStatus(t(uiLocale, 'popupNeedReauthorize'), 'error');

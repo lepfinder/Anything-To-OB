@@ -10,9 +10,25 @@ function sanitizeFilename(name: string): string {
     .slice(0, 80);
 }
 
+function getSourceName(url: string): string {
+  const domain = new URL(url).hostname;
+  if (domain.includes('github.com')) return 'GitHub';
+  if (domain.includes('x.com') || domain.includes('twitter.com')) return 'X';
+  if (domain.includes('mp.weixin.qq.com')) return 'WeChat';
+  if (domain.includes('youtube.com') || domain.includes('youtu.be')) return 'YouTube';
+  if (domain.includes('xiaohongshu.com')) return 'Xiaohongshu';
+  if (domain.includes('juejin.cn')) return 'Juejin';
+  if (domain.includes('zhihu.com')) return 'Zhihu';
+  if (domain.includes('bilibili.com')) return 'Bilibili';
+  
+  // Fallback: simplified domain name
+  return domain.replace('www.', '').split('.')[0].toUpperCase();
+}
+
 function buildFilename(clip: ClipResult): string {
+  const source = getSourceName(clip.url);
   const title = sanitizeFilename(clip.title);
-  return `${clip.date}-${title}.md`;
+  return `${clip.date}-[${source}]-${title}.md`;
 }
 
 async function findUniqueFilename(
@@ -36,6 +52,19 @@ async function findUniqueFilename(
   }
 }
 
+async function getRecursiveDirectoryHandle(
+  root: FileSystemDirectoryHandle,
+  path: string,
+): Promise<FileSystemDirectoryHandle> {
+  // Normalize and split by / or \
+  const parts = path.split(/[/\\]/).filter((p) => p.length > 0);
+  let currentHandle = root;
+  for (const part of parts) {
+    currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
+  }
+  return currentHandle;
+}
+
 export async function saveToVault(clip: ClipResult): Promise<SaveResult> {
   const vaultHandle = await getDirectoryHandle();
   if (!vaultHandle) {
@@ -55,8 +84,8 @@ export async function saveToVault(clip: ClipResult): Promise<SaveResult> {
       }
     }
 
-    // Get or create the subfolder
-    const subfolder = await vaultHandle.getDirectoryHandle(folderName, { create: true });
+    // Get or create the subfolder (support multi-level paths)
+    const subfolder = await getRecursiveDirectoryHandle(vaultHandle, folderName);
 
     // Build filename and ensure uniqueness
     const filename = await findUniqueFilename(subfolder, buildFilename(clip));
@@ -73,11 +102,12 @@ export async function saveToVault(clip: ClipResult): Promise<SaveResult> {
       // Index update failure should not undo a successful note write
     }
 
-    return { success: true, filename };
+    return { success: true, filename, vaultName: vaultHandle.name };
   } catch (err) {
     return {
       success: false,
       filename: '',
+      vaultName: '',
       error: err instanceof Error ? err.message : 'Unknown error',
     };
   }

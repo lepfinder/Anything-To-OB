@@ -23,6 +23,7 @@ export function getProviderConfig(p?: string): AiProviderConfig | null {
 }
 
 export interface AiSummaryResult {
+  title: string;
   oneSentence: string;
   summary: string;
   tags: string[];
@@ -30,10 +31,15 @@ export interface AiSummaryResult {
 
 export async function fetchOllamaModels(baseUrl: string): Promise<string[]> {
   try {
-    // Ollama's tags API: GET /api/tags
-    // We normalize the base URL (remove /v1 if present)
     const apiBase = baseUrl.replace(/\/v1\/?$/, '').replace(/\/$/, '');
-    const response = await fetch(`${apiBase}/api/tags`);
+    // Using common browser headers to help avoid proxy 403s
+    const response = await fetch(`${apiBase}/api/tags`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache',
+      },
+    });
     if (!response.ok) return [];
     
     const data = await response.json();
@@ -49,33 +55,55 @@ export async function fetchOllamaModels(baseUrl: string): Promise<string[]> {
 
 export async function extractAiMetadata(content: string, title: string): Promise<AiSummaryResult | null> {
   const settings = await getSetting<AppSettings>('appSettings');
-  if (!settings?.aiEnabled || !settings.aiProvider || !settings.aiConfigs) {
+  if (!settings?.aiEnabled) {
+    console.log('[AI] AI is disabled in settings.');
     return null;
   }
 
-  const provider = settings.aiProvider;
-  const config = settings.aiConfigs[provider];
-  if (!config) return null;
+  const provider = settings.aiProvider || 'deepseek';
+  const configs = settings.aiConfigs || {};
+  let config = configs[provider];
 
-  // Ollama usually doesn't need a key, but the SDK might require one
-  const isOllama = provider === 'ollama' || provider === 'ollama_remote';
-  let apiKey = config.apiKey || (isOllama ? 'ollama' : '');
-  if (!apiKey && !isOllama) {
+  // Resilience: If no config exists for Ollama, try default local settings
+  if (!config && (provider === 'ollama' || provider === 'ollama_remote')) {
+    console.warn(`[AI] No configuration found for ${provider}, using defaults.`);
+    config = {
+      apiKey: 'ollama',
+      baseUrl: provider === 'ollama' ? 'http://localhost:11434/v1' : '',
+      model: 'llama3',
+    };
+  }
+
+  if (!config) {
+    console.error(`[AI] No configuration found for provider: ${provider}`);
     return null;
+  }
+
+  const isOllama = provider === 'ollama' || provider === 'ollama_remote';
+  const apiKey = config.apiKey || (isOllama ? 'ollama' : '');
+  if (!apiKey && !isOllama) {
+    console.error('[AI] API Key is missing and provider is not Ollama.');
+    return null;
+  }
+
+  let baseUrl = config.baseUrl || 'https://api.openai.com/v1';
+  // Normalize Ollama Base URL to include /v1 for OpenAI SDK compatibility
+  if (isOllama && baseUrl && !baseUrl.includes('/v1')) {
+    baseUrl = baseUrl.replace(/\/$/, '') + '/v1';
   }
 
   const client = new OpenAI({
     apiKey: apiKey,
-    baseURL: config.baseUrl || 'https://api.openai.com/v1',
+    baseURL: baseUrl,
     dangerouslyAllowBrowser: true,
+    defaultHeaders: {
+      'Cache-Control': 'no-cache',
+    }
   });
 
   const locale = settings.locale === 'en' ? 'en' : 'zh';
   const language = locale === 'zh' ? '中文' : 'English';
-  const rawPrompt = settings.aiPrompt || (import('../shared/i18n').then(m => m.t(locale, 'optDefaultPrompt')) as any);
   
-  // Actually, we should get the string synchronously because it's already in settings or defaults
-  // Let's import t from i18n at the top to make it cleaner
   const { t: translate } = await import('../shared/i18n');
   const promptTemplate = settings.aiPrompt || translate(locale, 'optDefaultPrompt');
   
@@ -83,23 +111,58 @@ export async function extractAiMetadata(content: string, title: string): Promise
     .replace('{title}', title)
     .replace('{language}', language);
 
-  const prompt = `${finalPrompt}\n\nContent:\n${content.slice(0, 5000)}...`;
+  // Optimized content slicing: First 2500 + Last 1500 if over 4000
+  let aiContent = content;
+  if (content.length > 4000) {
+    aiContent = content.slice(0, 2500) + 
+      '\n\n...[Content truncated for brevity, showing head and tail]...\n\n' + 
+      content.slice(-1500);
+  }
+
+  const prompt = `${finalPrompt}\n\nContent:\n${aiContent}`;
+  
+  console.log(`[AI] Requesting ${provider} with model: ${config.model || 'default'}`);
 
   try {
-    const response = await client.chat.completions.create({
-      model: config.model || 'gpt-4o',
+    const params: any = {
+      model: config.model || (isOllama ? 'llama3' : 'gpt-4o'),
       messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || '{}');
-    return {
-      oneSentence: result.oneSentence || '',
-      summary: result.summary || '',
-      tags: Array.isArray(result.tags) ? result.tags : [],
     };
+
+    // Only use json_object mode for non-Ollama providers by default, 
+    // as many local models/Ollama versions have mixed support for it.
+    if (!isOllama) {
+      params.response_format = { type: 'json_object' };
+    }
+
+    const response = await client.chat.completions.create(params);
+    const contentText = response.choices[0].message.content || '';
+    
+    try {
+      // 1. Try direct JSON parse
+      const result = JSON.parse(contentText.trim());
+      return {
+        title: result.title || title,
+        oneSentence: result.oneSentence || '',
+        summary: result.summary || '',
+        tags: Array.isArray(result.tags) ? result.tags : [],
+      };
+    } catch {
+      // 2. Fallback: try to find JSON block in the text
+      const match = contentText.match(/\{[\s\S]*\}/);
+      if (match) {
+        const result = JSON.parse(match[0]);
+        return {
+          title: result.title || title,
+          oneSentence: result.oneSentence || '',
+          summary: result.summary || '',
+          tags: Array.isArray(result.tags) ? result.tags : [],
+        };
+      }
+      throw new Error('No valid JSON found in AI response');
+    }
   } catch (err) {
-    console.error('AI extraction failed:', err);
+    console.error(`[AI] ${provider} failed:`, err);
     return null;
   }
 }

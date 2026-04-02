@@ -12,6 +12,7 @@ const M = {
     popupCannotAccessPage: '无法访问此页面',
     popupSaveCancelled: '已取消保存',
     popupSaved: '已保存：{name}',
+    popupOpenInObsidian: '在 Obsidian 中打开',
     popupNeedReauthorize: '请重新授权仓库 — 打开设置',
     popupErrorPrefix: '错误：',
     popupUnknownError: '未知错误',
@@ -62,7 +63,7 @@ const M = {
     optAiPromptLabel: '自定义提示词：',
     optAiPromptHelp: '支持 {title} 和 {language} 变量。AI 会根据指令生成 JSON。',
     optDefaultPrompt:
-      '请分析下面标题为 "{title}" 的网页内容，并提供：\n1. 一句话总结（oneSentence）。\n2. 段落摘要（summary）。\n3. 3-5个相关的标签（tags）。\n\n请严格按 JSON 格式返回，包含上述三个键。请使用 {language} 回答。',
+      '请分析下面标题为 "{title}" 的网页内容，并提供：\n1. 一个新的简洁标题（title），能概括核心内容，避免通用描述。\n2. 一句话总结（oneSentence）。\n3. 段落摘要（summary）。\n4. 3-5个相关的标签（tags）。\n\n请严格按 JSON 格式返回，包含上述四个键。请使用 {language} 回答。',
   },
   en: {
     popupSaveToObsidian: 'Save to Obsidian',
@@ -75,6 +76,7 @@ const M = {
     popupCannotAccessPage: 'Cannot access this page',
     popupSaveCancelled: 'Save cancelled',
     popupSaved: 'Saved: {name}',
+    popupOpenInObsidian: 'Open in Obsidian',
     popupNeedReauthorize: 'Need to re-authorize vault — open Settings',
     popupErrorPrefix: 'Error: ',
     popupUnknownError: 'Unknown error',
@@ -126,7 +128,7 @@ const M = {
     optAiPromptLabel: 'Custom Prompt:',
     optAiPromptHelp: 'Supports {title} and {language} variables. AI will generate JSON output.',
     optDefaultPrompt:
-      'Analyze the following web content titled "{title}" and provide:\n1. A one-sentence summary (oneSentence).\n2. A short paragraph summary (summary).\n3. A list of 3-5 relevant tags (tags).\n\nRespond strictly in JSON format with the above three keys. Please respond in {language}.',
+      'Analyze the following web content titled "{title}" and provide:\n1. A new, concise title (title) that summarizes the core content and avoids generic descriptions.\n2. A one-sentence summary (oneSentence).\n3. A short paragraph summary (summary).\n4. A list of 3-5 relevant tags (tags).\n\nRespond strictly in JSON format with the above four keys. Please respond in {language}.',
   },
 } as const;
 
