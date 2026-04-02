@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "md2ob",
+  "name": "anything-to-ob",
   "description": "Save web pages as Markdown to Obsidian vault",
   "version": "1.0.0",
   "permissions": ["activeTab", "scripting"],

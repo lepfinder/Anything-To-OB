@@ -18,6 +18,20 @@ body {
 .save-btn:hover { background: #6b5fc9; }
 .save-btn:disabled { background: #555; cursor: not-allowed; }
 .save-btn.loading { background: #555; }
+.dup-panel {
+  margin-bottom: 10px; padding: 10px; border-radius: 6px;
+  background: #2a2610; border: 1px solid #6b5a1a; font-size: 12px;
+}
+.dup-panel.hidden { display: none; }
+.dup-message { color: #e8d48b; line-height: 1.45; margin-bottom: 8px; }
+.dup-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-secondary, .btn-primary {
+  flex: 1; padding: 7px 8px; border-radius: 5px; font-size: 12px; cursor: pointer; border: none;
+}
+.btn-secondary { background: #3a3a3a; color: #ccc; }
+.btn-secondary:hover { background: #4a4a4a; }
+.btn-primary { background: #8b6914; color: #fff; }
+.btn-primary:hover { background: #a47c18; }
 .status {
   margin-top: 10px; font-size: 12px; text-align: center;
   min-height: 18px;
