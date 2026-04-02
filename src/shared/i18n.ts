@@ -16,6 +16,7 @@ const M = {
     popupErrorPrefix: '错误：',
     popupUnknownError: '未知错误',
     popupSettings: '设置',
+    popupCurrentPage: '当前页面',
 
     dupTitle: '此前已保存过',
     dupBodyBefore: '该页面已在剪藏索引中，记录时间：',
@@ -68,6 +69,7 @@ const M = {
     popupErrorPrefix: 'Error: ',
     popupUnknownError: 'Unknown error',
     popupSettings: 'Settings',
+    popupCurrentPage: 'Current Page',
 
     dupTitle: 'Already saved',
     dupBodyBefore: 'This page is in your clip index from ',

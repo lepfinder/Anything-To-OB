@@ -6,25 +6,63 @@
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <div class="container">
-    <div class="title" id="page-title" data-i18n="popupLoading">加载中…</div>
-    <button type="button" id="btn-save" class="save-btn" data-i18n="popupSaveToObsidian">保存到 Obsidian</button>
-    <div id="status" class="status"></div>
-    <div class="footer">
-      <a href="#" id="btn-settings" class="settings-link" data-i18n="popupSettings">设置</a>
-    </div>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" fill-opacity="0.8"/>
+          <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="app-name">anything-to-ob</h1>
+      <button type="button" id="btn-settings" class="icon-btn" title="Settings" data-i18n="popupSettings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </header>
+
+    <main class="content">
+      <div class="page-info">
+        <label class="label" data-i18n="popupCurrentPage">当前页面</label>
+        <div class="title-wrapper">
+          <div class="title" id="page-title">加载中…</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="btn-save" class="save-btn">
+          <span class="btn-text" data-i18n="popupSaveToObsidian">保存到 Obsidian</span>
+          <span class="btn-loader hidden"></span>
+        </button>
+      </div>
+
+      <div id="status" class="status-container"></div>
+    </main>
   </div>
 
   <div id="dup-overlay" class="dup-overlay hidden" aria-hidden="true">
     <div class="dup-card" role="dialog" aria-modal="true" aria-labelledby="dup-title">
-      <div class="dup-badge" aria-hidden="true">↻</div>
+      <div class="dup-badge" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 2.1l4 4-4 4"></path>
+          <path d="M3 12.2v-2a4 4 0 0 1 4-4h14"></path>
+          <path d="M7 21.9l-4-4 4-4"></path>
+          <path d="M21 11.8v2a4 4 0 0 1-4 4H3"></path>
+        </svg>
+      </div>
       <h2 id="dup-title" class="dup-title" data-i18n="dupTitle">此前已保存过</h2>
       <p class="dup-body">
-        <span id="dup-body-before" data-i18n="dupBodyBefore"></span><time id="dup-time" class="dup-time"></time><span id="dup-body-after" data-i18n="dupBodyAfter"></span>
+        <span id="dup-body-before" data-i18n="dupBodyBefore"></span>
+        <time id="dup-time" class="dup-time"></time>
+        <span id="dup-body-after" data-i18n="dupBodyAfter"></span>
       </p>
-      <p class="dup-hint">
-        <span data-i18n="dupHint">索引文件：</span><code class="dup-code">clip-url-index.json</code>
-      </p>
+      <div class="dup-hint">
+        <span data-i18n="dupHint">索引文件：</span>
+        <code class="dup-code">clip-url-index.json</code>
+      </div>
       <div class="dup-actions">
         <button type="button" class="dup-btn dup-btn-secondary" id="dup-cancel" data-i18n="dupCancel">取消</button>
         <button type="button" class="dup-btn dup-btn-primary" id="dup-confirm" data-i18n="dupConfirm">仍要保存</button>
@@ -35,3 +73,4 @@
   <script type="module" src="popup.ts"></script>
 </body>
 </html>
+

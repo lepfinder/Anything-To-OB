@@ -8,8 +8,10 @@ import type { AppLocale, AppSettings, ClipRequest, SaveResult } from '../shared/
 
 const titleEl = document.getElementById('page-title') as HTMLDivElement;
 const btnSave = document.getElementById('btn-save') as HTMLButtonElement;
+const btnText = btnSave.querySelector('.btn-text') as HTMLSpanElement;
+const btnLoader = btnSave.querySelector('.btn-loader') as HTMLSpanElement;
 const statusEl = document.getElementById('status') as HTMLDivElement;
-const btnSettings = document.getElementById('btn-settings') as HTMLAnchorElement;
+const btnSettings = document.getElementById('btn-settings') as HTMLButtonElement;
 
 const dupOverlay = document.getElementById('dup-overlay') as HTMLDivElement;
 const dupCard = dupOverlay.querySelector('.dup-card') as HTMLElement | null;
@@ -35,23 +37,10 @@ function promptDuplicateSave(prevSavedAtIso: string): Promise<boolean> {
     dupTimeEl.textContent = formatSavedAt(prevSavedAtIso, uiLocale);
     dupOverlay.classList.remove('hidden');
     dupOverlay.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('dup-dialog-active');
-
-    const syncBodyMinHeight = (): void => {
-      if (!dupCard) return;
-      const overlayPad = 36;
-      const need = Math.ceil(dupCard.offsetHeight + overlayPad);
-      document.body.style.minHeight = `${Math.max(480, need)}px`;
-    };
-    requestAnimationFrame(() => {
-      syncBodyMinHeight();
-    });
 
     const cleanup = (proceed: boolean): void => {
       dupOverlay.classList.add('hidden');
       dupOverlay.setAttribute('aria-hidden', 'true');
-      document.body.classList.remove('dup-dialog-active');
-      document.body.style.minHeight = '';
       dupCancel.removeEventListener('click', onCancel);
       dupConfirm.removeEventListener('click', onConfirm);
       resolve(proceed);
@@ -83,14 +72,14 @@ async function loadTabInfo(): Promise<void> {
 
 function showStatus(message: string, type: 'success' | 'error'): void {
   statusEl.textContent = message;
-  statusEl.className = `status ${type}`;
+  statusEl.className = `status-container ${type}`;
 }
 
 function setSaving(value: boolean): void {
   saving = value;
   btnSave.disabled = value;
-  btnSave.textContent = value ? t(uiLocale, 'popupSaving') : t(uiLocale, 'popupSaveToObsidian');
-  btnSave.classList.toggle('loading', value);
+  btnText.textContent = value ? t(uiLocale, 'popupSaving') : t(uiLocale, 'popupSaveToObsidian');
+  btnLoader.classList.toggle('hidden', !value);
 }
 
 async function save(): Promise<void> {
@@ -105,7 +94,8 @@ async function save(): Promise<void> {
     return;
   }
 
-  statusEl.className = 'status';
+  statusEl.className = 'status-container';
+  statusEl.textContent = '';
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -123,14 +113,11 @@ async function save(): Promise<void> {
       return;
     }
 
-    // Clip with defuddle
+    // Clip
     const clip = clipPage(pageData);
 
     const appSettings = (await getSetting<AppSettings>('appSettings')) ?? { folderName: DEFAULT_CLIP_FOLDER };
     uiLocale = resolveLocale(appSettings);
-    applyTheme(resolveTheme(appSettings));
-    document.documentElement.lang = uiLocale === 'zh' ? 'zh-CN' : 'en';
-    applyDataI18n(uiLocale);
 
     if (appSettings.warnOnDuplicate !== false) {
       const sub = await getExistingClipSubfolder();
@@ -169,8 +156,7 @@ async function save(): Promise<void> {
 
 btnSave.addEventListener('click', save);
 
-btnSettings.addEventListener('click', (e) => {
-  e.preventDefault();
+btnSettings.addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
 });
 
@@ -180,3 +166,4 @@ async function init(): Promise<void> {
 }
 
 void init();
+
