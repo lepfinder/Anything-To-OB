@@ -1,71 +1,105 @@
-# anything-to-ob
+<img src="icons/icon128.png" width="32" height="32" alt="Anything-to-Ob" style="vertical-align: middle; margin-right: 8px;" /> Anything-to-Ob
+===
 
-Chrome 扩展（Manifest V3）：把当前网页 **抽成 Markdown**，带 YAML  frontmatter，**直接写入本地 Obsidian 库**（通过文件系统访问 API）。无需自建后端。
+**An intelligent, AI-powered web clipper for Obsidian** -- Year/Month auto-organization, LLM summaries, Deep-linking, and seamless vault synchronization.
 
-## 功能概览
+[![GitHub release](https://img.shields.io/badge/release-v1.0.0-purple)](https://github.com/your-username/anything-to-ob/releases)
+[![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge%20%7C%20Browser-lightgrey)](#)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-- 在任意页面（除部分受限制的 `chrome://` 等）采集 **当前 DOM 快照**，用 [Defuddle](https://github.com/kepano/defuddle) 抽取正文并转为 Markdown。
-- 生成的笔记包含：`title`、`source`（来源 URL）、`date`（保存日 ISO 日期），便于在 Obsidian 里检索与溯源。
-- 默认保存到库根目录下的 **`Clippings`** 子文件夹（可在选项里改名）；文件名为 `YYYY-MM-DD-标题.md`，同名会自动加序号。
-- **GitHub**（仓库、Issue、PR、代码文件等）有额外处理：例如仓库页会尽量等待 README 区域加载后再抓取。
+[中文文档](./README.zh-CN.md)
 
-## 技术栈
+---
 
-- TypeScript、Vite、[CRXJS Vite 插件](https://crxjs.dev/vite-plugin)
-- 内容脚本采集 HTML → 扩展页内 `DOMParser` + Defuddle → `FileSystemDirectoryHandle` 写入 `.md`
+[Quick Start](#quick-start) | [Core Capabilities](#core-capabilities) | [Development](#development) | [Privacy](#privacy)
 
-## 开发与构建
+---
 
-```bash
-npm install
-npm run build
-```
+## Why Anything-to-Ob
 
-产物在 **`dist/`**。在 Chrome 中打开 `chrome://extensions`，开启「开发者模式」，选择「加载已解压的扩展程序」，指向 **`dist`** 目录。
+**Intelligent Organization, Zero Clutter.** Stop dumping everything into a flat folder. Anything-to-Ob automatically archives your clips into Year/Month subdirectories (e.g., `2026/04/`), ensuring your Obsidian vault stays organized as it grows.
 
-开发时可使用：
+**LLM-Powered Summaries.** Don't just save pages; understand them. Built-in AI enrichment automatically generates "one-sentence summaries" and extracts relevant tags, helping you recall context months later.
 
-```bash
-npm run dev
-```
+**Deep Integration with Obsidian.** Powered by the `obsidian://` URI scheme. Every clip in your history is a live link that teleports you directly to the exact file in your local vault. No more manual searching.
 
-按 CRXJS 习惯配合 Vite 热更新调试（具体以当前插件版本行为为准）。
+**Local-First & Private.** Your data belongs to you. The extension reads and writes directly to your local file system via the File System Access API. History is synchronized through a local `.json` index within your vault, not a third-party cloud.
 
-## 首次使用
+---
 
-1. 安装扩展后，打开 **扩展选项**（或弹窗里的 Settings）。
-2. 点击选择目录，授予读写权限，选中你的 **Obsidian 库根目录**（vault 根）。
-3. 如需，修改「剪藏子文件夹」名称（默认 `Clippings`）。
-4. 在目标页面点击工具栏图标，在弹窗中点击 **Save to Obsidian**。
+## Quick Start
 
-若提示需要重新授权，回到选项页重新选择库目录即可。
+### Path A: Install the Extension
 
-## 权限说明
+1. Clone or download this repository.
+2. Building from source: `npm install && npm run build`.
+3. Open `chrome://extensions/` in your browser.
+4. Enable **Developer mode**.
+5. Click **Load unpacked** and select the `dist` folder.
 
-- **`activeTab`**：对当前标签页注入脚本并发消息采集页面信息。
-- **`scripting`**：在需要时与内容脚本配合工作。
+### Path B: Configuration
 
-数据 **只写入你本地选择的文件夹**，不经过远程服务器。
+1. **Set Vault Root**: Go to **Settings** and select your Obsidian clipping folder (e.g., `0 Inbox/Clippings`).
+2. **AI Setup**: (Optional) Enter your DeepSeek or OpenAI API key to enable AI-powered summaries.
+3. **Clip & Sync**: Switch to the **History** tab and click "Authorize" to enable synchronized history across your devices.
 
-## 已知限制
+---
 
-- `chrome://`、`chrome-extension://` 等页面无法采集。
-- 依赖浏览器对 **File System Access API** 与 **IndexedDB** 保存目录句柄的支持；需在选项页完成一次目录授权。
-- 单页应用若正文高度依赖异步渲染，可能需要等待页面加载完整后再保存（GitHub 仓库页已做简单等待）。
+## Core Capabilities
 
-## 项目结构（节选）
+### Clipping & Organization
 
-```
-src/
-  background/     # Service worker
-  content/         # 全站内容脚本，负责 EXTRACT_PAGE
-  popup/           # 工具栏弹窗
-  options/         # 选项页（库路径、子文件夹名）
-  lib/             # clipper（Defuddle）、storage、file 写入
-  shared/          # 类型定义
-icons/             # 扩展图标
-```
+| Capability | Details |
+|---|---|
+| Folder Structure | Automatic `YYYY/MM/` nesting |
+| Format | Clean GitHub Flavored Markdown |
+| Metadata | YAML Frontmatter with AI tags and summary |
+| Image Support | Automatic image conversion and local saving |
+| Deduplication | Global URL indexing to prevent duplicates |
 
-## 许可证
+### Intelligence & UI
+
+| Capability | Details |
+|---|---|
+| AI Enrichment | DeepSeek / OpenAI automated summaries |
+| Tabbed System | Separate views for Clipper and History |
+| Deep Linking | Instant `obsidian://` navigation |
+| Themes | Glassmorphism UI with Dark/Light support |
+| Synced History | Cross-browser history via vault-level JSON index |
+
+---
+
+## Technical Stack
+
+- **Frontend**: Vite + TypeScript + Vanilla CSS
+- **APIs**: File System Access API, Obsidian URI Scheme
+- **Formatting**: Turndown, Markdown-it
+- **Architecture**: Asynchronous index-based storage
+
+---
+
+## FAQ
+
+<details>
+<summary>History is empty on a new browser</summary>
+
+Go to the **History** tab and click the **Authorize** button. Because of browser security, we need your explicit permission to read the `clip-url-index.json` from your local vault. Once authorized, all your history will sync instantly.
+</details>
+
+<details>
+<summary>DeepSearch / AI is not working</summary>
+
+Ensure you have a valid API key and have selected a supported provider in the Settings page. Check the popup logs (Right-click > Inspect) for specific connectivity errors.
+</details>
+
+---
+
+## Privacy
+
+**Privacy by design.** This extension does NOT collect your browsing data, cookies, or personal information. All file operations are performed locally on your machine. AI analysis is sent only to the provider you configure (e.g., DeepSeek) and is not stored elsewhere.
+
+---
+
+## License
 
 MIT
