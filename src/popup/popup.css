@@ -137,6 +137,47 @@ body {
   gap: 8px;
 }
 
+.dup-notice {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0 12px 0;
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dup-notice::before {
+  content: '✓';
+  font-size: 14px;
+  display: inline-block;
+}
+
+.dup-link-btn {
+  color: var(--status-success-text);
+  opacity: 0.8;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dup-link-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
 .info-header {
   display: flex;
   align-items: center;

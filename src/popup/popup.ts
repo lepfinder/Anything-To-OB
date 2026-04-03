@@ -5,10 +5,12 @@ import { applyDataI18n, formatSavedAt, resolveLocale, tf, t } from '../shared/i1
 import { applyTheme, resolveTheme } from '../shared/theme';
 import { extractAiMetadata } from '../lib/ai';
 import {
-  findSavedAtForUrl,
+  findItemForUrl,
   getExistingClipSubfolder,
   DEFAULT_CLIP_FOLDER,
   readUrlIndex,
+  normalizeUrlForIndex,
+  type UrlIndexItem,
 } from '../lib/url-index';
 import type { AppLocale, AppSettings, ClipRequest, SaveResult } from '../shared/types';
 
@@ -61,6 +63,41 @@ function promptDuplicateSave(prevSavedAtIso: string): Promise<boolean> {
   });
 }
 
+/** UI: Show the "Already saved" notice bar with an Obsidian link button */
+async function showAlreadySavedNotice(item: UrlIndexItem) {
+  const badge = document.getElementById('duplicate-notice');
+  if (!badge) return;
+
+  const settings = await getSetting<AppSettings>('appSettings');
+  const folder = settings?.folderName || DEFAULT_CLIP_FOLDER;
+  const root = await getDirectoryHandle();
+  const vaultName = root?.name || '';
+
+  // Set localized text
+  const timeStr = formatSavedAt(item.savedAt, uiLocale);
+  const text = tf(uiLocale, 'popupAlreadyClipped', { date: timeStr });
+  
+  let html = `<span style="flex: 1">${text}</span>`;
+  
+  if (item.filename && vaultName) {
+    const filePath = folder ? `${folder}/${item.filename}` : item.filename;
+    const obsLink = `obsidian://open?vault=${encodeURIComponent(vaultName)}&file=${encodeURIComponent(filePath)}`;
+    
+    html += `
+      <a href="${obsLink}" class="dup-link-btn" title="${t(uiLocale, 'popupOpenInObsidian')}" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </a>
+    `;
+  }
+
+  badge.innerHTML = html;
+  badge.classList.remove('hidden');
+}
+
 // Load current tab title
 async function loadTabInfo(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -79,6 +116,38 @@ async function loadTabInfo(): Promise<void> {
       } catch (e) {
         console.warn('[Popup] Failed to parse URL:', e);
       }
+
+      // Proactive duplicate detection
+      void (async () => {
+        try {
+          if (!tab.url) return;
+          const key = normalizeUrlForIndex(tab.url);
+          console.log('[DupCheck] Current key:', key);
+
+          // 1. Try local cache first (Instant!)
+          const { urlHistoryCache } = (await chrome.storage.local.get('urlHistoryCache')) as { urlHistoryCache?: Record<string, UrlIndexItem> };
+          console.log('[DupCheck] Cache state:', urlHistoryCache ? Object.keys(urlHistoryCache).length : 'empty');
+
+          if (urlHistoryCache && urlHistoryCache[key]) {
+            console.log('[DupCheck] HIT in cache! Showing badge.');
+            showAlreadySavedNotice(urlHistoryCache[key]);
+            return; // Cache hit - stop here
+          }
+
+          // 2. Fallback to direct check + cache warming
+          const sub = await getExistingClipSubfolder(false);
+          if (sub && tab.url) {
+            console.log('[DupCheck] Subfolder accessible, checking real index...');
+            const item = await findItemForUrl(sub, tab.url);
+            if (item) {
+              console.log('[DupCheck] HIT in index! Showing badge.');
+              showAlreadySavedNotice(item);
+            }
+          }
+        } catch (err) {
+          console.debug('[Popup] Silent duplicate check failed:', err);
+        }
+      })();
     }
 
     // Disable save on unsupported pages
@@ -142,9 +211,9 @@ async function save(): Promise<void> {
       // For duplicate check, we still need real folder access (needs click, we are in a click handler here)
       const sub = await getExistingClipSubfolder(true);
       if (sub) {
-        const prevSavedAt = await findSavedAtForUrl(sub, pageData.url);
-        if (prevSavedAt) {
-          const proceed = await promptDuplicateSave(prevSavedAt);
+        const item = await findItemForUrl(sub, pageData.url);
+        if (item) {
+          const proceed = await promptDuplicateSave(item.savedAt);
           if (!proceed) {
             showStatus(t(uiLocale, 'popupSaveCancelled'), 'error');
             return;

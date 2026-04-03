@@ -45,7 +45,7 @@ export function normalizeUrlForIndex(raw: string): string {
   u.searchParams.sort();
 
   let pathname = u.pathname;
-  if (pathname.length > 1 && pathname.endsWith('/')) {
+  if (pathname.endsWith('/')) {
     pathname = pathname.slice(0, -1);
   }
 
@@ -90,10 +90,24 @@ export async function readUrlIndex(subfolder: FileSystemDirectoryHandle): Promis
     const file = await fh.getFile();
     const text = await file.text();
     if (!text.trim()) return emptyIndex();
-    return parseIndexJson(text);
+    const index = parseIndexJson(text);
+    // Sync to local cache for instant lookup next time
+    void syncUrlCacheToStorage(index);
+    return index;
   } catch {
     return emptyIndex();
   }
+}
+
+/** Mirror normalized URLs to chrome.storage for permission-less instant lookup */
+async function syncUrlCacheToStorage(index: UrlIndexFile): Promise<void> {
+  if (typeof chrome === 'undefined' || !chrome.storage) return;
+
+  const cache: Record<string, UrlIndexItem> = {};
+  for (const item of index.items) {
+    if (item.url) cache[item.url] = item;
+  }
+  await chrome.storage.local.set({ urlHistoryCache: cache });
 }
 
 export async function writeUrlIndex(
@@ -104,17 +118,18 @@ export async function writeUrlIndex(
   const writable = await fh.createWritable();
   await writable.write(`${JSON.stringify(index, null, 2)}\n`);
   await writable.close();
+  // Update cache immediately
+  void syncUrlCacheToStorage(index);
 }
 
-/** Returns ISO savedAt if this normalized URL exists in the index. */
-export async function findSavedAtForUrl(
+/** Returns the full item if this normalized URL exists in the index. */
+export async function findItemForUrl(
   subfolder: FileSystemDirectoryHandle,
   rawUrl: string,
-): Promise<string | null> {
+): Promise<UrlIndexItem | null> {
   const key = normalizeUrlForIndex(rawUrl);
   const index = await readUrlIndex(subfolder);
-  const hit = index.items.find(i => i.url === key);
-  return hit?.savedAt ?? null;
+  return index.items.find(i => i.url === key) ?? null;
 }
 
 export async function upsertUrlInIndex(

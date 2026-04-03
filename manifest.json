@@ -3,7 +3,7 @@
   "name": "anything-to-ob",
   "description": "Save web pages as Markdown to Obsidian vault",
   "version": "1.0.0",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_icon": {

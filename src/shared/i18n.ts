@@ -25,8 +25,9 @@ const M = {
     popupSettings: '设置',
     popupCurrentPage: '笔记预览',
     popupAiAnalyzing: 'AI 正在分析摘要与标签...',
+    popupAlreadyClipped: '{date} 已剪藏过',
 
-    dupTitle: '此前已保存过',
+    dupTitle: '已剪藏',
     dupBodyBefore: '该页面已在剪藏索引中，记录时间：',
     dupBodyAfter: '。仍要再保存一篇笔记吗？',
     dupHint: '索引文件：',
@@ -102,8 +103,9 @@ const M = {
     popupSettings: 'Settings',
     popupCurrentPage: 'Note Preview',
     popupAiAnalyzing: 'AI is analyzing summary and tags...',
+    popupAlreadyClipped: 'Clipped at {date}',
 
-    dupTitle: 'Already saved',
+    dupTitle: 'Clipped',
     dupBodyBefore: 'This page is in your clip index from ',
     dupBodyAfter: '. Save another note anyway?',
     dupHint: 'Index file: ',
