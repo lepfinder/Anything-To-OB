@@ -23,7 +23,7 @@ const M = {
     popupErrorPrefix: '错误：',
     popupUnknownError: '未知错误',
     popupSettings: '设置',
-    popupCurrentPage: '当前页面',
+    popupCurrentPage: '笔记预览',
     popupAiAnalyzing: 'AI 正在分析摘要与标签...',
 
     dupTitle: '此前已保存过',
@@ -93,7 +93,7 @@ const M = {
     popupErrorPrefix: 'Error: ',
     popupUnknownError: 'Unknown error',
     popupSettings: 'Settings',
-    popupCurrentPage: 'Current Page',
+    popupCurrentPage: 'Note Preview',
     popupAiAnalyzing: 'AI is analyzing summary and tags...',
 
     dupTitle: 'Already saved',

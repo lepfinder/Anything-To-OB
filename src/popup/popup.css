@@ -2,7 +2,7 @@
   /* Common */
   --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --transition: cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   /* Dark Theme (Default) */
   --bg: #0f0f12;
   --card-bg: rgba(26, 26, 30, 0.7);
@@ -53,7 +53,8 @@ html {
 
 body {
   width: 440px;
-  min-height: 300px;
+  height: 320px;
+  /* Fixed height to anchor button at bottom */
   font-family: var(--font-main);
   background: var(--bg);
   color: var(--text);
@@ -66,10 +67,13 @@ body {
 
 /* App Container */
 .app-container {
-  padding: 20px 24px;
+  padding: 20px 24px 16px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 30px;
+  flex: 1;
+  /* Fill all available body height */
+  height: 100%;
 }
 
 /* Header */
@@ -122,13 +126,30 @@ body {
 .content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  flex: 1;
+  /* Stretch to fill container */
 }
 
 .page-info {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
   gap: 6px;
+  padding-left: 2px;
+}
+
+.info-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .label {
@@ -142,21 +163,28 @@ body {
 .title-wrapper {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 12px;
+  padding: 12px 16px;
   border-radius: 12px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .title {
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.domain-info {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.8;
+  font-family: monospace;
 }
 
 /* Save Button */
@@ -210,7 +238,9 @@ body {
 }
 
 @keyframes rotate {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .hidden {
@@ -275,13 +305,25 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .dup-badge {
@@ -400,9 +442,22 @@ body {
   flex-direction: column;
   gap: 16px;
   animation: fadeIn 0.3s ease;
+  flex: 1;
+  /* Stretch to fill content area */
 }
 
-/* History Status */
+/* Push actions to bottom */
+.page-info {
+  flex-shrink: 0;
+}
+
+.actions {
+  margin-top: auto;
+  padding-top: 12px;
+  margin-bottom: 20px;
+  /* Add some breathing room above the button */
+}
+
 .history-status {
   display: flex;
   flex-direction: column;
@@ -494,4 +549,3 @@ body {
   color: var(--text-muted);
   opacity: 0.6;
 }
-

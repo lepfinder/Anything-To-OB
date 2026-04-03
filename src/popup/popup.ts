@@ -68,6 +68,19 @@ async function loadTabInfo(): Promise<void> {
     titleEl.textContent = tab.title || t(uiLocale, 'popupUntitled');
     titleEl.title = tab.title || '';
 
+    // Display domain
+    if (tab.url) {
+      try {
+        const url = new URL(tab.url);
+        const domainEl = document.getElementById('page-domain');
+        if (domainEl) {
+          domainEl.textContent = url.hostname;
+        }
+      } catch (e) {
+        console.warn('[Popup] Failed to parse URL:', e);
+      }
+    }
+
     // Disable save on unsupported pages
     if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
       btnSave.disabled = true;

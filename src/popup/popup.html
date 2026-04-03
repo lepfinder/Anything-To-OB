@@ -33,11 +33,23 @@
       <!-- Clipper View -->
       <div id="view-clipper" class="tab-view active">
         <div class="page-info">
-          <label class="label" data-i18n="popupCurrentPage">当前页面</label>
+          <div class="info-header">
+            <span class="info-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+            </span>
+            <label class="label" data-i18n="popupCurrentPage">笔记预览</label>
+          </div>
           <div class="title-wrapper">
             <div class="title" id="page-title">加载中…</div>
+            <div class="domain-info" id="page-domain"></div>
           </div>
         </div>
+
+        <!-- Move status above actions -->
+        <div id="status" class="status-container"></div>
 
         <div class="actions">
           <button type="button" id="btn-save" class="save-btn">
@@ -45,8 +57,6 @@
             <span class="btn-loader hidden"></span>
           </button>
         </div>
-
-        <div id="status" class="status-container"></div>
       </div>
 
       <!-- History View -->
