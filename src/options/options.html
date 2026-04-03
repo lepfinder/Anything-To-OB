@@ -2,113 +2,172 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>anything-to-ob</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>anything-to-ob Settings</title>
   <link rel="stylesheet" href="options.css" />
 </head>
 <body>
-  <div class="container">
-    <h1 data-i18n="optTitle">anything-to-ob 设置</h1>
-
-    <section>
-      <h2 data-i18n="optVaultHeading">Obsidian 仓库</h2>
-      <p class="hint" data-i18n="optVaultHint">选择 Obsidian 库根目录，文件将保存在该目录下。</p>
-      <div class="field">
-        <label data-i18n="optVaultDirLabel">仓库目录：</label>
-        <span id="vault-path" class="path" data-i18n="optNotConfigured">未配置</span>
-        <button type="button" id="btn-choose" data-i18n="optChooseDir">选择目录</button>
-      </div>
-    </section>
-
-    <section>
-      <h2 data-i18n="optSaveLocationHeading">保存位置</h2>
-      <div class="field">
-        <label for="folder-name" data-i18n="optFolderNameLabel">文件夹名称：</label>
-        <input type="text" id="folder-name" value="Clippings" placeholder="Clippings" />
-      </div>
-      <p class="hint" data-i18n="optFolderHint">文件将保存到「库根/文件夹名/」下。</p>
-    </section>
-
-    <section>
-      <h2 data-i18n="optDuplicatesHeading">重复检测</h2>
-      <div class="field checkbox-field">
-        <label class="checkbox-label">
-          <input type="checkbox" id="warn-duplicate" checked />
-          <span data-i18n="optWarnDuplicateLabel">当链接已在剪藏索引中时提示</span>
-        </label>
-      </div>
-      <p class="hint" data-i18n="optDuplicatesHint">索引仅记录 url 与 savedAt。</p>
-    </section>
-    <section>
-      <h2 data-i18n="optAiHeading">AI 增强（总结与标签）</h2>
-      <div class="field checkbox-field">
-        <label class="checkbox-label">
-          <input type="checkbox" id="ai-enabled" />
-          <span data-i18n="optAiEnabledLabel">生成 AI 摘要与标签</span>
-        </label>
-      </div>
-      <div id="ai-config" class="ai-config">
-        <div class="field">
-          <label for="ai-provider" data-i18n="optAiProviderLabel">供应商:</label>
-          <select id="ai-provider">
-            <option value="deepseek">DeepSeek</option>
-            <option value="ollama">Ollama (Local)</option>
-            <option value="ollama_remote">Ollama (Remote)</option>
-            <option value="qwen">通义千问 (Qwen)</option>
-            <option value="zhipu">智谱 AI (Zhipu)</option>
-            <option value="kimi">月之暗面 (Moonshot)</option>
-            <option value="openai">OpenAI</option>
-            <option value="custom">Other (Custom URL)</option>
-          </select>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
         </div>
-        <div class="field password-field">
-          <label for="ai-api-key">API Key:</label>
-          <div class="input-wrapper">
-            <input type="password" id="ai-api-key" placeholder="sk-..." />
-            <button type="button" id="btn-toggle-key" class="btn-icon">👁️</button>
+        <h1 class="app-title">Anything-to-Ob</h1>
+      </div>
+
+      <nav class="side-nav">
+        <a href="#section-vault" class="nav-item active">
+          <span class="nav-icon">📦</span>
+          <span data-i18n="optVaultHeading">Obsidian 仓库</span>
+        </a>
+        <a href="#section-location" class="nav-item">
+          <span class="nav-icon">📂</span>
+          <span data-i18n="optSaveLocationHeading">保存位置</span>
+        </a>
+        <a href="#section-duplicate" class="nav-item">
+          <span class="nav-icon">🚫</span>
+          <span data-i18n="optDuplicatesHeading">重复检测</span>
+        </a>
+        <a href="#section-ai" class="nav-item">
+          <span class="nav-icon">✨</span>
+          <span data-i18n="optAiHeading">AI 增强</span>
+        </a>
+        <a href="#section-appearance" class="nav-item">
+          <span class="nav-icon">🎨</span>
+          <span data-i18n="optThemeHeading">外观与语言</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div id="status" class="status"></div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content-container">
+        <!-- Vault Section -->
+        <section id="section-vault" class="settings-section">
+          <h2 data-i18n="optVaultHeading">Obsidian 仓库</h2>
+          <p class="hint" data-i18n="optVaultHint">选择 Obsidian 库根目录，文件将保存在该目录下。</p>
+          <div class="card">
+            <div class="field vertical">
+              <label data-i18n="optVaultDirLabel">仓库目录：</label>
+              <div class="path-display">
+                <span id="vault-path" class="path" data-i18n="optNotConfigured">未配置</span>
+                <button type="button" id="btn-choose" class="btn-primary" data-i18n="optChooseDir">选择目录</button>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="field" id="ai-url-field">
-          <label for="ai-base-url">Base URL:</label>
-          <input type="text" id="ai-base-url" placeholder="https://api.openai.com/v1" />
-        </div>
-        <div class="field">
-          <label for="ai-model" data-i18n="optAiModelLabel">Model:</label>
-          <div class="input-wrapper">
-            <input type="text" id="ai-model" list="ai-model-list" placeholder="gpt-4o" />
-            <datalist id="ai-model-list"></datalist>
+        </section>
+
+        <!-- Location Section -->
+        <section id="section-location" class="settings-section">
+          <h2 data-i18n="optSaveLocationHeading">保存位置</h2>
+          <div class="card">
+            <div class="field">
+              <label for="folder-name" data-i18n="optFolderNameLabel">文件夹名称：</label>
+              <input type="text" id="folder-name" value="Clippings" placeholder="Clippings" />
+            </div>
+            <p class="hint" data-i18n="optFolderHint">文件将保存到「库根/文件夹名/」下。</p>
           </div>
-        </div>
-        <div class="field vertical">
-          <label for="ai-prompt" data-i18n="optAiPromptLabel">Custom Prompt:</label>
-          <textarea id="ai-prompt" rows="5" placeholder="Analyze the content..."></textarea>
-          <p class="hint" data-i18n="optAiPromptHelp">Supports {title} and {language} variables...</p>
-        </div>
-      </div>
-    </section>
+        </section>
 
-    <section>
-      <h2 data-i18n="optThemeHeading">外观</h2>
-      <div class="field">
-        <label for="theme-select" data-i18n="optThemeLabel">主题：</label>
-        <select id="theme-select">
-          <option value="dark" data-i18n="optThemeDark">深色</option>
-          <option value="light" data-i18n="optThemeLight">浅色</option>
-        </select>
-      </div>
-    </section>
+        <!-- Duplicate Section -->
+        <section id="section-duplicate" class="settings-section">
+          <h2 data-i18n="optDuplicatesHeading">重复检测</h2>
+          <div class="card">
+            <div class="field checkbox-field">
+              <label class="toggle">
+                <input type="checkbox" id="warn-duplicate" checked />
+                <span class="toggle-slider"></span>
+                <span class="toggle-label" data-i18n="optWarnDuplicateLabel">当链接已在剪藏索引中时提示</span>
+              </label>
+            </div>
+            <p class="hint" data-i18n="optDuplicatesHint">索引仅记录 url 与 savedAt。</p>
+          </div>
+        </section>
 
-    <section>
-      <h2 data-i18n="optLanguageHeading">界面语言</h2>
-      <div class="field">
-        <label for="locale-select" data-i18n="optLanguageLabel">语言：</label>
-        <select id="locale-select">
-          <option value="zh" data-i18n="optLangZh">中文</option>
-          <option value="en" data-i18n="optLangEn">English</option>
-        </select>
-      </div>
-    </section>
+        <!-- AI Section -->
+        <section id="section-ai" class="settings-section">
+          <h2 data-i18n="optAiHeading">AI 增强（总结与标签）</h2>
+          <div class="card">
+            <div class="field checkbox-field">
+              <label class="toggle">
+                <input type="checkbox" id="ai-enabled" />
+                <span class="toggle-slider"></span>
+                <span data-i18n="optAiEnabledLabel">生成 AI 摘要与标签</span>
+              </label>
+            </div>
+            
+            <div id="ai-config" class="ai-config-grid">
+              <div class="field">
+                <label for="ai-provider" data-i18n="optAiProviderLabel">供应商:</label>
+                <select id="ai-provider">
+                  <option value="deepseek">DeepSeek</option>
+                  <option value="ollama">Ollama (Local)</option>
+                  <option value="ollama_remote">Ollama (Remote)</option>
+                  <option value="qwen">通义千问 (Qwen)</option>
+                  <option value="zhipu">智谱 AI (Zhipu)</option>
+                  <option value="kimi">月之暗面 (Moonshot)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="custom">Other (Custom URL)</option>
+                </select>
+              </div>
+              <div class="field password-field">
+                <label for="ai-api-key">API Key:</label>
+                <div class="input-wrapper">
+                  <input type="password" id="ai-api-key" placeholder="sk-..." />
+                  <button type="button" id="btn-toggle-key" class="btn-icon">👁️</button>
+                </div>
+              </div>
+              <div class="field" id="ai-url-field">
+                <label for="ai-base-url">Base URL:</label>
+                <input type="text" id="ai-base-url" placeholder="https://api.openai.com/v1" />
+              </div>
+              <div class="field">
+                <label for="ai-model" data-i18n="optAiModelLabel">Model:</label>
+                <div class="input-wrapper">
+                  <input type="text" id="ai-model" list="ai-model-list" placeholder="gpt-4o" />
+                  <datalist id="ai-model-list"></datalist>
+                </div>
+              </div>
+              <div class="field vertical full-width">
+                <label for="ai-prompt" data-i18n="optAiPromptLabel">Custom Prompt:</label>
+                <textarea id="ai-prompt" rows="5" placeholder="Analyze the content..."></textarea>
+                <p class="hint" data-i18n="optAiPromptHelp">Supports {title} and {language} variables...</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-    <div id="status" class="status"></div>
+        <!-- Appearance & Language Section -->
+        <section id="section-appearance" class="settings-section">
+          <h2 data-i18n="optThemeHeading">外观与语言</h2>
+          <div class="card grid-2">
+            <div class="field">
+              <label for="theme-select" data-i18n="optThemeLabel">主题：</label>
+              <select id="theme-select">
+                <option value="dark" data-i18n="optThemeDark">深色</option>
+                <option value="light" data-i18n="optThemeLight">浅色</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="locale-select" data-i18n="optLanguageLabel">语言：</label>
+              <select id="locale-select">
+                <option value="zh" data-i18n="optLangZh">中文</option>
+                <option value="en" data-i18n="optLangEn">English</option>
+              </select>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
   </div>
   <script type="module" src="options.ts"></script>
 </body>

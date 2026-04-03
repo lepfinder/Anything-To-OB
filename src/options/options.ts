@@ -21,6 +21,10 @@ const localeSelect = document.getElementById('locale-select') as HTMLSelectEleme
 const themeSelect = document.getElementById('theme-select') as HTMLSelectElement | null;
 const statusEl = document.getElementById('status') as HTMLDivElement;
 
+const mainContent = document.querySelector('.main-content') as HTMLDivElement;
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.settings-section');
+
 function currentUiLocale(): AppLocale {
   return localeSelect?.value === 'en' ? 'en' : 'zh';
 }
@@ -38,20 +42,21 @@ async function persistAppSettings(partial: Partial<AppSettings>): Promise<void> 
     aiEnabled: partial.aiEnabled !== undefined ? partial.aiEnabled : (prev.aiEnabled ?? false),
     aiProvider: partial.aiProvider !== undefined ? partial.aiProvider : (prev.aiProvider ?? 'deepseek'),
     aiConfigs: partial.aiConfigs !== undefined ? partial.aiConfigs : (prev.aiConfigs ?? {}),
+    aiPrompt: partial.aiPrompt !== undefined ? partial.aiPrompt : (prev.aiPrompt ?? '')
   };
   await saveSetting<AppSettings>('appSettings', next);
 }
 
 function updateAiConfigVisibility(enabled: boolean): void {
   if (aiConfigPanel) {
-    aiConfigPanel.classList.toggle('hidden', !enabled);
+    aiConfigPanel.style.display = enabled ? 'grid' : 'none';
   }
 }
 
 function updateUrlFieldVisibility(provider: string): void {
   if (aiUrlField) {
     const isCustom = provider === 'custom' || provider === 'ollama_remote';
-    aiUrlField.classList.toggle('hidden', !isCustom);
+    aiUrlField.style.display = isCustom ? 'flex' : 'none';
   }
 }
 
@@ -62,12 +67,8 @@ async function tryFetchOllamaModels(baseUrl: string): Promise<void> {
   const models = await fetchOllamaModels(baseUrl);
   if (models.length > 0) {
     list.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
-    
-    // If input is empty, pick the first found model as current choice
     if (aiModelEl && !aiModelEl.value.trim()) {
       aiModelEl.value = models[0];
-      // Note: we don't dispatch event here to avoid infinite loop or flickering during load
-      // But we should save it if it's a fresh change
     }
   }
 }
@@ -123,11 +124,41 @@ async function loadSettings(): Promise<void> {
 
 function showStatus(message: string, type: 'success' | 'error'): void {
   statusEl.textContent = message;
-  statusEl.className = `status ${type}`;
+  statusEl.className = `status visible ${type}`;
   setTimeout(() => {
     statusEl.className = 'status';
   }, 3000);
 }
+
+// Navigation Logic
+function updateActiveNav(): void {
+  let currentSection = '';
+  sections.forEach(section => {
+    const rect = section.getBoundingClientRect();
+    // If the section top is near the top of the main area
+    if (rect.top < 150) {
+      currentSection = section.id;
+    }
+  });
+
+  navItems.forEach(item => {
+    const href = item.getAttribute('href')?.substring(1);
+    item.classList.toggle('active', href === currentSection);
+  });
+}
+
+mainContent?.addEventListener('scroll', updateActiveNav);
+
+navItems.forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    const targetId = item.getAttribute('href')?.substring(1);
+    const targetEl = document.getElementById(targetId || '');
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+});
 
 // Event Listeners
 btnChoose?.addEventListener('click', async () => {
@@ -188,7 +219,6 @@ aiProviderSelect?.addEventListener('change', async () => {
 });
 
 const btnToggleKey = document.getElementById('btn-toggle-key') as HTMLButtonElement | null;
-
 btnToggleKey?.addEventListener('click', () => {
   if (aiApiKeyEl) {
     const isPassword = aiApiKeyEl.type === 'password';
@@ -221,28 +251,6 @@ btnToggleKey?.addEventListener('click', () => {
     });
     showStatus(t(loc, 'optStatusAiSaved'), 'success');
   });
-});
-
-// Force datalist to show all options on focus/click for better UX
-aiModelEl?.addEventListener('focus', () => {
-  aiModelEl.select();
-  if (typeof aiModelEl.showPicker === 'function') {
-    try {
-      aiModelEl.showPicker();
-    } catch {
-      // Ignore errors if picker cannot be shown
-    }
-  }
-});
-
-aiModelEl?.addEventListener('click', () => {
-  if (typeof aiModelEl.showPicker === 'function') {
-    try {
-      aiModelEl.showPicker();
-    } catch {
-      // Ignore
-    }
-  }
 });
 
 localeSelect?.addEventListener('change', async () => {
