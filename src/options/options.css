@@ -127,7 +127,11 @@ body {
 }
 
 .nav-icon {
-  font-size: 18px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-footer {
@@ -351,6 +355,90 @@ input:focus, select:focus, textarea:focus {
 
 .status.visible {
   opacity: 1;
+}
+
+/* About Card */
+.about-card {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.about-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 8px;
+}
+
+.logo.large {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+}
+
+.logo.large svg {
+  width: 32px;
+  height: 32px;
+}
+
+.about-title h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.about-title .version {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.description {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 500px;
+}
+
+.about-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.about-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.about-link:hover {
+  background: var(--border);
+  transform: translateY(-1px);
+}
+
+.about-link.github {
+  background: #24292f;
+  color: white;
+  border: none;
+}
+
+.about-link.github:hover {
+  background: #1a1e22;
+}
+
+.link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Custom Scrollbar */

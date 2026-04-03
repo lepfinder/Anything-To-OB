@@ -70,6 +70,13 @@ const M = {
     optAiPromptHelp: '支持 {title} 和 {language} 变量。AI 会根据指令生成 JSON。',
     optDefaultPrompt:
       '请分析下面标题为 "{title}" 的网页内容，并提供：\n1. 一个新的简洁标题（title），能概括核心内容，避免通用描述。\n2. 一句话总结（oneSentence）。\n3. 段落摘要（summary）。\n4. 3-5个相关的标签（tags）。\n\n请严格按 JSON 格式返回，包含上述四个键。请使用 {language} 回答。',
+
+    optAboutHeading: '关于',
+    optVersionLabel: '版本：',
+    optGithubLabel: '源码地址：',
+    optFeedbackLabel: '问题反馈：',
+    optOpenInGithub: '在 GitHub 中查看',
+    optDescription: '一个将网页一键剪藏到 Obsidian 的浏览器插件，支持 AI 摘要与标签。',
   },
   en: {
     popupSaveToObsidian: 'Save to Obsidian',
@@ -141,6 +148,13 @@ const M = {
     optAiPromptHelp: 'Supports {title} and {language} variables. AI will generate JSON output.',
     optDefaultPrompt:
       'Analyze the following web content titled "{title}" and provide:\n1. A new, concise title (title) that summarizes the core content and avoids generic descriptions.\n2. A one-sentence summary (oneSentence).\n3. A short paragraph summary (summary).\n4. A list of 3-5 relevant tags (tags).\n\nRespond strictly in JSON format with the above four keys. Please respond in {language}.',
+
+    optAboutHeading: 'About',
+    optVersionLabel: 'Version: ',
+    optGithubLabel: 'Source Code: ',
+    optFeedbackLabel: 'Issues & Feedback: ',
+    optOpenInGithub: 'View on GitHub',
+    optDescription: 'A browser extension for one-click clipping of web pages to Obsidian, with AI summaries and tags.',
   },
 } as const;
 
