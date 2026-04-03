@@ -24,22 +24,43 @@
       </button>
     </header>
 
+    <nav class="app-tabs">
+      <button type="button" id="tab-clipper" class="tab-btn active" data-i18n="tabClipper">剪藏</button>
+      <button type="button" id="tab-history" class="tab-btn" data-i18n="tabHistory">最近</button>
+    </nav>
+
     <main class="content">
-      <div class="page-info">
-        <label class="label" data-i18n="popupCurrentPage">当前页面</label>
-        <div class="title-wrapper">
-          <div class="title" id="page-title">加载中…</div>
+      <!-- Clipper View -->
+      <div id="view-clipper" class="tab-view active">
+        <div class="page-info">
+          <label class="label" data-i18n="popupCurrentPage">当前页面</label>
+          <div class="title-wrapper">
+            <div class="title" id="page-title">加载中…</div>
+          </div>
         </div>
+
+        <div class="actions">
+          <button type="button" id="btn-save" class="save-btn">
+            <span class="btn-text" data-i18n="popupSaveToObsidian">保存到 Obsidian</span>
+            <span class="btn-loader hidden"></span>
+          </button>
+        </div>
+
+        <div id="status" class="status-container"></div>
       </div>
 
-      <div class="actions">
-        <button type="button" id="btn-save" class="save-btn">
-          <span class="btn-text" data-i18n="popupSaveToObsidian">保存到 Obsidian</span>
-          <span class="btn-loader hidden"></span>
-        </button>
+      <!-- History View -->
+      <div id="view-history" class="tab-view">
+        <div id="history-loading" class="history-status hidden">
+          <span class="btn-loader"></span>
+          <span data-i18n="historyLoading">正在加载索引...</span>
+        </div>
+        <div id="history-auth" class="history-status hidden">
+          <p data-i18n="historyAuthNeeded">查看历史需授权读取文件夹</p>
+          <button type="button" id="btn-auth-history" class="dup-btn dup-btn-primary" data-i18n="historyAuthBtn">点击授权</button>
+        </div>
+        <div id="recent-list" class="recent-list"></div>
       </div>
-
-      <div id="status" class="status-container"></div>
     </main>
   </div>
 

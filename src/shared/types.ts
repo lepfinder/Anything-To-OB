@@ -27,6 +27,7 @@ export interface ClipResult {
   content: string;
   url: string;
   date: string;
+  oneSentence?: string;
 }
 
 export interface SaveResult {

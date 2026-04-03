@@ -68,41 +68,61 @@ async function getRecursiveDirectoryHandle(
 export async function saveToVault(clip: ClipResult): Promise<SaveResult> {
   const vaultHandle = await getDirectoryHandle();
   if (!vaultHandle) {
-    return { success: false, filename: '', error: 'Vault directory not configured' };
+    return { success: false, filename: '', vaultName: '', error: 'Vault directory not configured' };
   }
 
   const settings = await getSetting<AppSettings>('appSettings');
-  const folderName = settings?.folderName || DEFAULT_CLIP_FOLDER;
+  const baseFolderName = settings?.folderName || DEFAULT_CLIP_FOLDER;
 
   try {
-    // Verify permission
+    // 1. Verify permission
     const perm = await vaultHandle.queryPermission({ mode: 'readwrite' });
     if (perm !== 'granted') {
       const req = await vaultHandle.requestPermission({ mode: 'readwrite' });
       if (req !== 'granted') {
-        return { success: false, filename: '', error: 'Permission denied for vault directory' };
+        return { success: false, filename: '', vaultName: '', error: 'Permission denied for vault directory' };
       }
     }
 
-    // Get or create the subfolder (support multi-level paths)
-    const subfolder = await getRecursiveDirectoryHandle(vaultHandle, folderName);
+    // 2. Access the base folder (for index)
+    const baseFolder = await getRecursiveDirectoryHandle(vaultHandle, baseFolderName);
 
-    // Build filename and ensure uniqueness
-    const filename = await findUniqueFilename(subfolder, buildFilename(clip));
+    // 3. Construct the nested path for the note (Year/Month)
+    const now = new Date();
+    const year = now.getFullYear().toString();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const noteSubPath = `${year}/${month}`;
+    const noteFolderFull = `${baseFolderName}/${noteSubPath}`;
+    
+    // 4. Access/Create the note folder
+    const noteFolder = await getRecursiveDirectoryHandle(vaultHandle, noteFolderFull);
 
-    // Write the file
-    const fileHandle = await subfolder.getFileHandle(filename, { create: true });
+    // 5. Build filename and ensure uniqueness within the monthly folder
+    const filenameOnly = await findUniqueFilename(noteFolder, buildFilename(clip));
+
+    // 6. Write the file
+    const fileHandle = await noteFolder.getFileHandle(filenameOnly, { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(clip.content);
     await writable.close();
 
+    // 7. Update the global index (located in base folder)
+    const relativeFilePath = `${noteSubPath}/${filenameOnly}`;
     try {
-      await upsertUrlInIndex(subfolder, clip.url);
-    } catch {
-      // Index update failure should not undo a successful note write
+      await upsertUrlInIndex(baseFolder, clip.url, {
+        title: clip.title,
+        oneSentence: clip.oneSentence || '',
+        filename: relativeFilePath,
+      });
+    } catch (err) {
+      console.warn('[File] Index update failed:', err);
     }
 
-    return { success: true, filename, vaultName: vaultHandle.name };
+    return { 
+      success: true, 
+      filename: relativeFilePath, // Path relative to BASE folder or VAULT? Let's use relative to BASE
+      vaultName: vaultHandle.name 
+    };
   } catch (err) {
     return {
       success: false,

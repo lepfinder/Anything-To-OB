@@ -4,7 +4,12 @@ import { getDirectoryHandle, getSetting } from '../lib/storage';
 import { applyDataI18n, formatSavedAt, resolveLocale, tf, t } from '../shared/i18n';
 import { applyTheme, resolveTheme } from '../shared/theme';
 import { extractAiMetadata } from '../lib/ai';
-import { findSavedAtForUrl, getExistingClipSubfolder, DEFAULT_CLIP_FOLDER } from '../lib/url-index';
+import {
+  findSavedAtForUrl,
+  getExistingClipSubfolder,
+  DEFAULT_CLIP_FOLDER,
+  readUrlIndex,
+} from '../lib/url-index';
 import type { AppLocale, AppSettings, ClipRequest, SaveResult } from '../shared/types';
 
 const titleEl = document.getElementById('page-title') as HTMLDivElement;
@@ -121,7 +126,8 @@ async function save(): Promise<void> {
     uiLocale = resolveLocale(appSettings);
 
     if (appSettings.warnOnDuplicate !== false) {
-      const sub = await getExistingClipSubfolder();
+      // For duplicate check, we still need real folder access (needs click, we are in a click handler here)
+      const sub = await getExistingClipSubfolder(true);
       if (sub) {
         const prevSavedAt = await findSavedAtForUrl(sub, pageData.url);
         if (prevSavedAt) {
@@ -156,6 +162,9 @@ async function save(): Promise<void> {
 summary: "${aiResult.oneSentence.replace(/"/g, '\\"')}"
 description: "${aiResult.summary.replace(/"/g, '\\"')}"`;
         
+        // Pass to clip object for storing in index
+        clip.oneSentence = aiResult.oneSentence;
+
         // Update both the title in frontmatter and append AI fields
         clip.content = clip.content.replace(/^---\n([\s\S]*?)\n---/, (match, group1) => {
           const frontmatter = group1.replace(/^title:.*$/m, `title: ${clip.title}`);
@@ -188,6 +197,9 @@ description: "${aiResult.summary.replace(/"/g, '\\"')}"`;
         </div>
       `;
       statusEl.className = 'status-container success';
+
+      // Refresh recent list (in background if permission exists)
+      renderRecentClips();
     } else {
       if (result.error?.includes('Permission denied') || result.error?.includes('not configured')) {
         showStatus(t(uiLocale, 'popupNeedReauthorize'), 'error');
@@ -208,6 +220,39 @@ btnSettings.addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
 });
 
+// Tabs configuration
+const tabClipper = document.getElementById('tab-clipper') as HTMLButtonElement;
+const tabHistory = document.getElementById('tab-history') as HTMLButtonElement;
+const viewClipper = document.getElementById('view-clipper') as HTMLElement;
+const viewHistory = document.getElementById('view-history') as HTMLElement;
+const btnAuthHistory = document.getElementById('btn-auth-history') as HTMLButtonElement;
+const historyLoading = document.getElementById('history-loading') as HTMLElement;
+const historyAuth = document.getElementById('history-auth') as HTMLElement;
+
+tabClipper.addEventListener('click', () => switchTab('clipper'));
+tabHistory.addEventListener('click', () => {
+  switchTab('history');
+  renderRecentClips(true); // Automatically request permission on tab click!
+});
+
+btnAuthHistory.addEventListener('click', async () => {
+  await renderRecentClips(true);
+});
+
+function switchTab(tab: 'clipper' | 'history') {
+  if (tab === 'clipper') {
+    tabClipper.classList.add('active');
+    tabHistory.classList.remove('active');
+    viewClipper.classList.add('active');
+    viewHistory.classList.remove('active');
+  } else {
+    tabClipper.classList.remove('active');
+    tabHistory.classList.add('active');
+    viewClipper.classList.remove('active');
+    viewHistory.classList.add('active');
+  }
+}
+
 async function init(): Promise<void> {
   await refreshPopupLocale();
   await loadTabInfo();
@@ -215,3 +260,85 @@ async function init(): Promise<void> {
 
 void init();
 
+async function renderRecentClips(forceRequest = false) {
+  console.log('[Recent] Starting render process, forceRequest:', forceRequest);
+  const listEl = document.getElementById('recent-list');
+  if (!listEl || !historyLoading || !historyAuth) return;
+
+  // Reset UI
+  listEl.innerHTML = '';
+  historyLoading.classList.remove('hidden');
+  historyAuth.classList.add('hidden');
+
+  const subfolder = await getExistingClipSubfolder(forceRequest);
+  
+  historyLoading.classList.add('hidden');
+
+  if (!subfolder) {
+    console.warn('[Recent] No subfolder handle - showing auth prompt');
+    historyAuth.classList.remove('hidden');
+    return;
+  }
+
+  console.log('[Recent] Found subfolder handle:', subfolder.name);
+
+  try {
+    const index = await readUrlIndex(subfolder);
+    console.log('[Recent] Index loaded. Items:', index.items?.length || 0);
+    
+    if (!index.items || index.items.length === 0) {
+      return;
+    }
+
+    renderItemsToList(index.items.slice(0, 10)); // Show more in the tab!
+    console.log('[Recent] Render complete');
+  } catch (err) {
+    console.error('[Recent] Render failed with error:', err);
+    historyAuth.classList.remove('hidden');
+  }
+}
+
+async function renderItemsToList(items: any[]) {
+  const listEl = document.getElementById('recent-list');
+  if (!listEl) return;
+  
+  const settings = await getSetting<AppSettings>('appSettings');
+  const vaultHandle = await getDirectoryHandle();
+  const vaultName = vaultHandle?.name || '';
+  const folderName = settings?.folderName || DEFAULT_CLIP_FOLDER;
+
+  listEl.innerHTML = '';
+
+  for (const item of items) {
+    if (!item.filename || !item.title) continue;
+
+    const obsLink = `obsidian://open?vault=${encodeURIComponent(
+      vaultName,
+    )}&file=${encodeURIComponent(folderName + '/' + item.filename)}`;
+
+    // Time format: 08:30 or HH:mm
+    let timeStr = '';
+    if (item.savedAt) {
+      if (item.savedAt.includes(' ')) {
+        // format: "2026-04-03 08:30:00" -> "08:30"
+        timeStr = item.savedAt.split(' ')[1].slice(0, 5);
+      } else {
+        // format: ISO -> 11:16
+        timeStr = item.savedAt.slice(11, 16);
+      }
+    }
+
+    const itemEl = document.createElement('a');
+    itemEl.href = obsLink;
+    itemEl.className = 'recent-item';
+    itemEl.target = '_blank';
+    itemEl.innerHTML = `
+      <div class="recent-item-title">${item.title}</div>
+      <div class="recent-item-summary">${item.oneSentence || ''}</div>
+      <div class="recent-item-footer">
+        <div class="recent-item-time">${timeStr}</div>
+      </div>
+    `;
+    listEl.appendChild(itemEl);
+  }
+}

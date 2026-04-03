@@ -9,6 +9,9 @@ export const CLIP_URL_INDEX_FILE = 'clip-url-index.json';
 export interface UrlIndexItem {
   url: string;
   savedAt: string;
+  title?: string;
+  oneSentence?: string;
+  filename?: string;
 }
 
 export interface UrlIndexFile {
@@ -68,7 +71,15 @@ function parseIndexJson(text: string): UrlIndexFile {
     const r = row as Record<string, unknown>;
     const url = typeof r.url === 'string' ? r.url : '';
     const savedAt = typeof r.savedAt === 'string' ? r.savedAt : '';
-    if (url && savedAt) items.push({ url, savedAt });
+    if (url && savedAt) {
+      items.push({
+        url,
+        savedAt,
+        title: typeof r.title === 'string' ? r.title : undefined,
+        oneSentence: typeof r.oneSentence === 'string' ? r.oneSentence : undefined,
+        filename: typeof r.filename === 'string' ? r.filename : undefined,
+      });
+    }
   }
   return { version: 1, items };
 }
@@ -109,36 +120,73 @@ export async function findSavedAtForUrl(
 export async function upsertUrlInIndex(
   subfolder: FileSystemDirectoryHandle,
   rawUrl: string,
+  extra?: { title?: string; oneSentence?: string; filename?: string },
 ): Promise<void> {
   const key = normalizeUrlForIndex(rawUrl);
-  const savedAt = new Date().toISOString();
+  
+  // Use local ISO format for human readability in JSON
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  const localIso = new Date(now.getTime() - offset).toISOString().slice(0, 19).replace('T', ' ');
+  
   const index = await readUrlIndex(subfolder);
   const idx = index.items.findIndex(i => i.url === key);
-  if (idx >= 0) index.items[idx].savedAt = savedAt;
-  else index.items.push({ url: key, savedAt });
+  
+  const newItem: UrlIndexItem = { url: key, savedAt: localIso, ...extra };
+  
+  if (idx >= 0) {
+    index.items[idx] = newItem;
+  } else {
+    // New item at the beginning
+    index.items.unshift(newItem);
+  }
+  
+  // Optional: keep index size within a reasonable limit if it gets too huge
   await writeUrlIndex(subfolder, index);
+}
+
+export async function verifyVaultReadPermission(handle: FileSystemDirectoryHandle): Promise<boolean> {
+  const status = await handle.queryPermission({ mode: 'read' });
+  return status === 'granted';
 }
 
 async function ensureVaultReadWrite(vaultHandle: FileSystemDirectoryHandle): Promise<boolean> {
   const perm = await vaultHandle.queryPermission({ mode: 'readwrite' });
   if (perm === 'granted') return true;
-  const req = await vaultHandle.requestPermission({ mode: 'readwrite' });
-  return req === 'granted';
+  
+  try {
+    const req = await vaultHandle.requestPermission({ mode: 'readwrite' });
+    return req === 'granted';
+  } catch (err) {
+    console.warn('[Storage] Could not request permission (need user gesture):', err);
+    return false;
+  }
 }
 
 /**
  * Open clip subfolder without creating it. Used before first save to read index only.
  */
-export async function getExistingClipSubfolder(): Promise<FileSystemDirectoryHandle | null> {
+export async function getExistingClipSubfolder(request = false): Promise<FileSystemDirectoryHandle | null> {
   const vaultHandle = await getDirectoryHandle();
   if (!vaultHandle) return null;
-  if (!(await ensureVaultReadWrite(vaultHandle))) return null;
+  
+  if (request) {
+    if (!(await ensureVaultReadWrite(vaultHandle))) return null;
+  } else {
+    if (!(await verifyVaultReadPermission(vaultHandle))) return null;
+  }
 
   const settings = await getSetting<AppSettings>('appSettings');
   const folderName = settings?.folderName?.trim() || DEFAULT_CLIP_FOLDER;
 
+  const parts = folderName.split(/[/\\]/).filter((p) => p.length > 0);
+  let currentHandle = vaultHandle;
+  
   try {
-    return await vaultHandle.getDirectoryHandle(folderName, { create: false });
+    for (const part of parts) {
+      currentHandle = await currentHandle.getDirectoryHandle(part, { create: false });
+    }
+    return currentHandle;
   } catch {
     return null;
   }
