@@ -192,39 +192,55 @@ async function save(): Promise<void> {
       return;
     }
 
-    // Extract page data from content script
-    let pageData: ClipRequest;
-    try {
-      pageData = await chrome.tabs.sendMessage(tab.id, { type: 'EXTRACT_PAGE' });
-    } catch {
-      showStatus(t(uiLocale, 'popupCannotAccessPage'), 'error');
+    // 1. Immediate UI feedback & Permission request (Must be first to keep User Activation)
+    setSaving(true);
+    const sub = await getExistingClipSubfolder(true);
+    if (!sub) {
+      showStatus(t(uiLocale, 'popupVaultNotConfigured'), 'error');
+      setSaving(false);
       return;
     }
-
-    // Clip
-    const clip = clipPage(pageData);
 
     const appSettings = (await getSetting<AppSettings>('appSettings')) ?? { folderName: DEFAULT_CLIP_FOLDER };
     uiLocale = resolveLocale(appSettings);
 
+    // Extract page data from content script
+    let pageData: ClipRequest;
+    try {
+      pageData = await chrome.tabs.sendMessage(tab.id, { type: 'EXTRACT_PAGE' });
+    } catch (err) {
+      console.error('[Popup] Message failed:', err);
+      showStatus(t(uiLocale, 'popupCannotAccessPage'), 'error');
+      setSaving(false);
+      return;
+    }
+
     if (appSettings.warnOnDuplicate !== false) {
-      // For duplicate check, we still need real folder access (needs click, we are in a click handler here)
-      const sub = await getExistingClipSubfolder(true);
-      if (sub) {
-        const item = await findItemForUrl(sub, pageData.url);
-        if (item) {
-          const proceed = await promptDuplicateSave(item.savedAt);
-          if (!proceed) {
-            showStatus(t(uiLocale, 'popupSaveCancelled'), 'error');
-            return;
-          }
+      // 2. Proactive cache check (Fast!)
+      const key = normalizeUrlForIndex(pageData.url);
+      const { urlHistoryCache } = (await chrome.storage.local.get('urlHistoryCache')) as { urlHistoryCache?: Record<string, UrlIndexItem> };
+      
+      let item = urlHistoryCache ? urlHistoryCache[key] : null;
+
+      // 3. Fallback to real index if cache missed (already have 'sub' from top)
+      if (!item) {
+        item = await findItemForUrl(sub, pageData.url);
+      }
+
+      if (item) {
+        setSaving(false); // Enable button for the modal
+        const proceed = await promptDuplicateSave(item.savedAt);
+        if (!proceed) {
+          showStatus(t(uiLocale, 'popupSaveCancelled'), 'error');
+          setSaving(false);
+          return;
         }
+        setSaving(true); // Back to saving
       }
     }
 
-    setSaving(true);
-
-    // AI Enrichment
+    // Clip
+    const clip = clipPage(pageData);
     const settingsForAi = await getSetting<AppSettings>('appSettings');
     console.log('[Popup] Current settings:', settingsForAi);
     if (settingsForAi?.aiEnabled) {
