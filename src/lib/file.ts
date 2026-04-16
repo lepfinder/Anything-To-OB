@@ -2,12 +2,20 @@ import type { ClipResult, SaveResult, AppSettings } from '../shared/types';
 import { getDirectoryHandle, getSetting } from './storage';
 import { DEFAULT_CLIP_FOLDER, upsertUrlInIndex } from './url-index';
 
+/**
+ * Safe, shell-friendly basename: no spaces, no colons; keep CJK text (source uses `()` in filename).
+ * Invalid path chars → `-`; collapse repeated `-`.
+ */
 function sanitizeFilename(name: string): string {
-  return name
-    .replace(/[/\\:*?"<>|#]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 80);
+  let s = name
+    .replace(/\uFF1A/g, '-') // 中文冒号 ：
+    .replace(/:/g, '-') // ASCII :（Windows 非法）
+    .replace(/[/\\*?"<>|#]/g, '-');
+  s = s.replace(/\s+/g, '-');
+  s = s.replace(/-+/g, '-');
+  s = s.replace(/^-+|-+$/g, '').trim();
+  if (!s) s = 'note';
+  return s.slice(0, 80);
 }
 
 function getSourceName(url: string): string {
@@ -28,7 +36,7 @@ function getSourceName(url: string): string {
 function buildFilename(clip: ClipResult): string {
   const source = getSourceName(clip.url);
   const title = sanitizeFilename(clip.title);
-  return `${clip.date}-[${source}]-${title}.md`;
+  return `${clip.date}-(${source})-${title}.md`;
 }
 
 async function findUniqueFilename(
